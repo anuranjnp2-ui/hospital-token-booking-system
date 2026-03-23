@@ -17,7 +17,7 @@ export function UserNavbar() {
           <div className="gradient-primary flex h-9 w-9 items-center justify-center rounded-lg">
             <Hospital className="h-5 w-5 text-primary-foreground" />
           </div>
-          <span className="text-lg font-bold font-display text-gradient">Modern Clinic</span>
+          <span className="text-lg font-bold font-display text-gradient">GentleQueue</span>
         </Link>
 
         <nav className="flex items-center gap-1">

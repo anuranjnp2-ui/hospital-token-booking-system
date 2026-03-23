@@ -1,5 +1,4 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { fetchTodayTokens, fetchActiveBreaks } from "@/lib/supabase-helpers";
 import { AdminNavbar } from "@/components/AdminNavbar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,28 +7,49 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Radio, Coffee, UtensilsCrossed, CheckCircle, XCircle, Play, Clock, AlertTriangle } from "lucide-react";
 
+const API_BASE = "http://localhost:8000/api";
+
+const getTokenHeaders = () => {
+  return {
+    "Content-Type": "application/json",
+    "Authorization": `Bearer ${localStorage.getItem("access_token")}`
+  };
+};
+
 export default function AdminLiveToken() {
   const qc = useQueryClient();
   const { data: tokens } = useQuery({ queryKey: ["today_tokens"], queryFn: fetchTodayTokens, refetchInterval: 5000 });
   const { data: breaks } = useQuery({ queryKey: ["active_breaks"], queryFn: fetchActiveBreaks, refetchInterval: 5000 });
 
-  const consulting = tokens?.find((t) => t.status === "consulting");
-  const waiting = tokens?.filter((t) => t.status === "waiting") || [];
-  const completed = tokens?.filter((t) => t.status === "completed" || t.status === "cancelled") || [];
+  const consulting = tokens?.find((t: any) => t.status === "IN_PROGRESS" || t.status === "consulting");
+  const waiting = tokens?.filter((t: any) => t.status === "PENDING" || t.status === "waiting") || [];
+  const completed = tokens?.filter((t: any) => t.status === "COMPLETED" || t.status === "CANCELLED" || t.status === "completed" || t.status === "cancelled") || [];
 
   const updateToken = useMutation({
-    mutationFn: async ({ id, status }: { id: string; status: string }) => {
-      const { error } = await supabase.from("tokens").update({ status }).eq("id", id);
-      if (error) throw error;
+    mutationFn: async ({ id, status }: { id: string | number; status: string }) => {
+      // Map frontend status strings to backend choices
+      const mappedStatus = status.toUpperCase();
+      const res = await fetch(`${API_BASE}/tokens/${id}/`, {
+        method: "PATCH",
+        headers: getTokenHeaders(),
+        body: JSON.stringify({ status: mappedStatus })
+      });
+      if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(`Server returned ${res.status}: ${errorText}`);
+      }
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["today_tokens"] }),
     onError: (e: any) => toast.error(e.message),
   });
 
   const deleteToken = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from("tokens").delete().eq("id", id);
-      if (error) throw error;
+    mutationFn: async (id: string | number) => {
+      const res = await fetch(`${API_BASE}/tokens/${id}/`, {
+        method: "DELETE",
+        headers: getTokenHeaders()
+      });
+      if (!res.ok) throw new Error("Failed to delete token");
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["today_tokens"] }); toast.success("Token removed"); },
     onError: (e: any) => toast.error(e.message),
@@ -37,30 +57,38 @@ export default function AdminLiveToken() {
 
   const addBreak = useMutation({
     mutationFn: async (breakType: string) => {
-      const { error } = await supabase.from("doctor_breaks").insert({ break_type: breakType });
-      if (error) throw error;
+      const res = await fetch(`${API_BASE}/breaks/`, {
+        method: "POST",
+        headers: getTokenHeaders(),
+        body: JSON.stringify({ break_type: breakType, active: true })
+      });
+      if (!res.ok) throw new Error("Failed to start break");
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["active_breaks"] }); toast.success("Break started"); },
+    onSuccess: (_, breakType) => { qc.invalidateQueries({ queryKey: ["active_breaks"] }); toast.success(`${breakType} started`); },
     onError: (e: any) => toast.error(e.message),
   });
 
   const endBreak = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from("doctor_breaks").update({ active: false, end_time: new Date().toISOString() }).eq("id", id);
-      if (error) throw error;
+    mutationFn: async (id: string | number) => {
+      const res = await fetch(`${API_BASE}/breaks/${id}/`, {
+        method: "PATCH",
+        headers: getTokenHeaders(),
+        body: JSON.stringify({ active: false })
+      });
+      if (!res.ok) throw new Error("Failed to end break");
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["active_breaks"] }); toast.success("Break ended"); },
     onError: (e: any) => toast.error(e.message),
   });
 
   const callNext = () => {
-    // Mark current as completed, then set next waiting as consulting
+    // Mark current as completed, then set next waiting as in_progress
     const actions: Promise<void>[] = [];
     if (consulting) {
-      actions.push(updateToken.mutateAsync({ id: consulting.id, status: "completed" }));
+      actions.push(updateToken.mutateAsync({ id: consulting.id, status: "COMPLETED" }));
     }
     if (waiting.length > 0) {
-      actions.push(updateToken.mutateAsync({ id: waiting[0].id, status: "consulting" }));
+      actions.push(updateToken.mutateAsync({ id: waiting[0].id, status: "IN_PROGRESS" }));
     }
     Promise.all(actions).then(() => toast.success("Next patient called"));
   };
@@ -80,7 +108,7 @@ export default function AdminLiveToken() {
           <CardHeader><CardTitle className="text-sm">Doctor Break Controls</CardTitle></CardHeader>
           <CardContent className="flex flex-wrap gap-2">
             {hasActiveBreak ? (
-              breaks!.map(b => (
+              breaks!.map((b: any) => (
                 <Button key={b.id} variant="outline" onClick={() => endBreak.mutate(b.id)} className="border-warning text-warning hover:bg-warning/10">
                   End {b.break_type}
                 </Button>
@@ -93,16 +121,6 @@ export default function AdminLiveToken() {
             )}
           </CardContent>
         </Card>
-
-        {/* Active Break Alert */}
-        {hasActiveBreak && (
-          <Card className="border-warning/40 bg-warning/10">
-            <CardContent className="p-4 flex items-center gap-3">
-              <AlertTriangle className="h-6 w-6 text-warning" />
-              <p className="font-semibold text-warning">Doctor is on {breaks![0].break_type}</p>
-            </CardContent>
-          </Card>
-        )}
 
         {/* Currently Consulting */}
         <Card className="border-primary/30">
@@ -117,15 +135,15 @@ export default function AdminLiveToken() {
                     <span className="text-xl font-extrabold text-primary-foreground">#{consulting.token_number}</span>
                   </div>
                   <div>
-                    <p className="font-semibold">{consulting.patient_name}</p>
+                    <p className="font-semibold">{consulting.patient_name || "Unknown"}</p>
                     <p className="text-sm text-muted-foreground">{consulting.phone}</p>
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  <Button size="sm" onClick={() => { updateToken.mutate({ id: consulting.id, status: "completed" }); toast.success("Marked complete"); }} className="bg-success hover:bg-success/90 text-success-foreground">
+                  <Button size="sm" onClick={() => { updateToken.mutate({ id: consulting.id, status: "COMPLETED" }); toast.success("Marked complete"); }} className="bg-success hover:bg-success/90 text-success-foreground">
                     <CheckCircle className="h-4 w-4 mr-1" />Complete
                   </Button>
-                  <Button size="sm" variant="destructive" onClick={() => { updateToken.mutate({ id: consulting.id, status: "cancelled" }); toast.success("Marked cancelled"); }}>
+                  <Button size="sm" variant="destructive" onClick={() => { updateToken.mutate({ id: consulting.id, status: "CANCELLED" }); toast.success("Marked cancelled"); }}>
                     <XCircle className="h-4 w-4 mr-1" />Cancel
                   </Button>
                 </div>
@@ -148,7 +166,7 @@ export default function AdminLiveToken() {
             {waiting.length === 0 ? (
               <p className="text-muted-foreground text-center py-3">No patients waiting</p>
             ) : (
-              waiting.map((token, i) => (
+              waiting.map((token: any, i: number) => (
                 <div key={token.id} className="flex items-center justify-between rounded-lg border p-3">
                   <div className="flex items-center gap-3">
                     <span className="flex h-9 w-9 items-center justify-center rounded-full bg-accent text-accent-foreground font-bold text-sm">#{token.token_number}</span>
@@ -159,7 +177,7 @@ export default function AdminLiveToken() {
                   </div>
                   <div className="flex items-center gap-2">
                     <Badge variant="outline">~{(i + 1) * 5} min</Badge>
-                    <Button size="icon" variant="ghost" onClick={() => { updateToken.mutate({ id: token.id, status: "cancelled" }); toast.success("Cancelled"); }} className="text-destructive hover:text-destructive h-8 w-8">
+                    <Button size="icon" variant="ghost" onClick={() => { updateToken.mutate({ id: token.id, status: "CANCELLED" }); toast.success("Cancelled"); }} className="text-destructive hover:text-destructive h-8 w-8">
                       <XCircle className="h-4 w-4" />
                     </Button>
                   </div>
@@ -174,11 +192,11 @@ export default function AdminLiveToken() {
           <Card>
             <CardHeader><CardTitle className="text-sm text-muted-foreground">Completed / Cancelled Today ({completed.length})</CardTitle></CardHeader>
             <CardContent className="space-y-1">
-              {completed.map(token => (
+              {completed.map((token: any) => (
                 <div key={token.id} className="flex items-center justify-between rounded border p-2 opacity-60">
                   <span className="text-sm">#{token.token_number} - {token.patient_name}</span>
                   <div className="flex items-center gap-2">
-                    <Badge variant={token.status === "completed" ? "default" : "destructive"} className="text-xs">
+                    <Badge variant={token.status.toUpperCase() === "COMPLETED" ? "default" : "destructive"} className="text-xs">
                       {token.status}
                     </Badge>
                     <Button size="icon" variant="ghost" onClick={() => deleteToken.mutate(token.id)} className="h-6 w-6 text-muted-foreground hover:text-destructive">

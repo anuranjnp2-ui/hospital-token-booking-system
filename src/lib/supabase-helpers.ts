@@ -1,65 +1,64 @@
-import { supabase } from "@/integrations/supabase/client";
+// API helpers overriding Supabase for the Gentle Queue project
+const API_BASE = "http://localhost:8000/api";
 
 export async function fetchHospitalInfo() {
-  const { data, error } = await supabase.from("hospital_info").select("*").limit(1).single();
-  if (error) throw error;
-  return data;
+  const res = await fetch(`${API_BASE}/hospital/`);
+  if (!res.ok) throw new Error("Failed to fetch hospital info");
+  const data = await res.json();
+  return data.length > 0 ? data[0] : null;
 }
 
 export async function fetchDoctors() {
-  const { data, error } = await supabase.from("doctors").select("*").order("created_at");
-  if (error) throw error;
-  return data;
+  const res = await fetch(`${API_BASE}/doctors/`);
+  if (!res.ok) throw new Error("Failed to fetch doctors");
+  return res.json();
 }
 
 export async function fetchServices() {
-  const { data, error } = await supabase.from("services").select("*").order("created_at");
-  if (error) throw error;
-  return data;
+  const res = await fetch(`${API_BASE}/services/`);
+  if (!res.ok) throw new Error("Failed to fetch services");
+  return res.json();
 }
 
 export async function fetchTodayTokens() {
-  const today = new Date().toISOString().split("T")[0];
-  const { data, error } = await supabase
-    .from("tokens")
-    .select("*")
-    .eq("date", today)
-    .order("token_number");
-  if (error) throw error;
-  return data;
+  const res = await fetch(`${API_BASE}/tokens/`);
+  if (!res.ok) throw new Error("Failed to fetch queue");
+  const data = await res.json();
+  
+  // Map Django backend string choices to the React UI's expectations
+  return data.map((t: any) => ({
+    ...t,
+    status: t.status === 'PENDING' ? 'waiting' 
+          : t.status === 'IN_PROGRESS' ? 'consulting' 
+          : t.status.toLowerCase()
+  }));
 }
 
 export async function fetchActiveBreaks() {
-  const today = new Date().toISOString().split("T")[0];
-  const { data, error } = await supabase
-    .from("doctor_breaks")
-    .select("*")
-    .eq("date", today)
-    .eq("active", true);
-  if (error) throw error;
-  return data;
+  const res = await fetch(`${API_BASE}/breaks/`);
+  if (!res.ok) throw new Error("Failed to fetch breaks");
+  return res.json();
 }
 
 export async function bookToken(patientName: string, phone: string) {
-  const { data: userResult, error: userError } = await supabase.auth.getUser();
-  if (userError) throw userError;
-  const user = userResult.user;
-
-  const { data, error } = await supabase
-    .rpc("book_token", {
-      _patient_name: patientName,
-      _phone: phone,
-      _created_by: user ? user.id : null,
+  const res = await fetch(`${API_BASE}/tokens/book/`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      patient_name: patientName,
+      phone: phone
     })
-    .single();
-
-  if (error) throw error;
-  return data;
+  });
+  
+  if (!res.ok) {
+    const errorData = await res.json();
+    throw new Error(errorData.error || "Failed to book token");
+  }
+  return res.json();
 }
 
 export async function checkIsAdmin() {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return false;
-  const { data } = await supabase.rpc("has_role", { _user_id: user.id, _role: "admin" });
-  return !!data;
+  return false;
 }

@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -8,40 +7,39 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Shield, ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
-import { checkIsAdmin } from "@/lib/supabase-helpers";
 
 export default function AdminLogin() {
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const check = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        const isAdmin = await checkIsAdmin();
-        if (isAdmin) navigate("/admin");
-      }
-    };
-    check();
+    const token = localStorage.getItem("access_token");
+    if (token) navigate("/admin");
   }, [navigate]);
 
   const handleLogin = async () => {
-    if (!email || !password) {
-      toast.error("Please enter email and password");
+    if (!username || !password) {
+      toast.error("Please enter username and password");
       return;
     }
     setLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) throw error;
-      const isAdmin = await checkIsAdmin();
-      if (!isAdmin) {
-        await supabase.auth.signOut();
-        toast.error("Access denied. You are not an admin.");
-        return;
+      const res = await fetch("http://localhost:8000/api/auth/login/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password })
+      });
+      
+      if (!res.ok) {
+        throw new Error("Invalid username or password");
       }
+      
+      const data = await res.json();
+      localStorage.setItem("access_token", data.access);
+      localStorage.setItem("refresh_token", data.refresh);
+      
       toast.success("Welcome, Admin!");
       navigate("/admin");
     } catch (err: any) {
@@ -62,8 +60,8 @@ export default function AdminLogin() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <Label htmlFor="email">Email</Label>
-            <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="admin@hospital.com" />
+            <Label htmlFor="username">Username</Label>
+            <Input id="username" type="text" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="admin" />
           </div>
           <div>
             <Label htmlFor="password">Password</Label>
