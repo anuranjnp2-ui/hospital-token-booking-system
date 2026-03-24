@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Radio, Coffee, UtensilsCrossed, CheckCircle, XCircle, Play, Clock, AlertTriangle } from "lucide-react";
 
-const API_BASE = "http://localhost:8000/api";
+const API_BASE = "https://hospital-token-booking-system-p03y.onrender.com/api";
 
 const getTokenHeaders = () => {
   return {

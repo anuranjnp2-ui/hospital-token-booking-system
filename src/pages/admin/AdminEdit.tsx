@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { Save, Plus, Trash2, Hospital, User, Activity, Lock } from "lucide-react";
 
-const API_BASE = "http://localhost:8000/api";
+const API_BASE = "https://hospital-token-booking-system-p03y.onrender.com/api";
 
 const getTokenHeaders = () => {
   return {

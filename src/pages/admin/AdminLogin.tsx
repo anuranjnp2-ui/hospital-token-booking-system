@@ -26,7 +26,7 @@ export default function AdminLogin() {
     }
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:8000/api/auth/login/", {
+      const res = await fetch("https://hospital-token-booking-system-p03y.onrender.com/api/auth/login/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password })

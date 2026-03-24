@@ -1,5 +1,5 @@
 // API helpers overriding Supabase for the Gentle Queue project
-const API_BASE = "http://localhost:8000/api";
+const API_BASE = "https://hospital-token-booking-system-p03y.onrender.com/api";
 
 export async function fetchHospitalInfo() {
   const res = await fetch(`${API_BASE}/hospital/`);
