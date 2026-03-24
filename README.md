@@ -1,3 +1,3 @@
-# Gentle Queue - Hospital Token Booking System
+# Modern Clinic - Hospital Token Booking System
 
 TODO: Document your project here

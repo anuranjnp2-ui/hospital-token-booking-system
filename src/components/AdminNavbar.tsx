@@ -27,7 +27,7 @@ export function AdminNavbar() {
           <div className="gradient-primary flex h-9 w-9 items-center justify-center rounded-lg">
             <Hospital className="h-5 w-5 text-primary-foreground" />
           </div>
-          <span className="text-lg font-bold font-display text-gradient">MediQueue</span>
+          <span className="text-lg font-bold font-display text-gradient">Modern Clinic</span>
           <span className="rounded-md bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">Admin</span>
         </Link>
 
