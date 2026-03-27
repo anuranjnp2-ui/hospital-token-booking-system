@@ -36,6 +36,7 @@ ALLOWED_HOSTS = ["*"]
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
+    'corsheaders',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
@@ -147,8 +148,12 @@ else:
     ]
 
 CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r"^https:\/\/.*\.vercel\.app$",
+]
 CSRF_TRUSTED_ORIGINS = [
-    "https://hospital-token-booking-system-p03y.onrender.com"
+    "https://hospital-token-booking-system-p03y.onrender.com",
+    "https://*.vercel.app"
 ]
 
 # DRF Settings
