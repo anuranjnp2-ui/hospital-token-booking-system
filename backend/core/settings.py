@@ -115,7 +115,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Kolkata'
 
 USE_I18N = True
 
@@ -131,15 +131,36 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 # Custom Authentication Model
 AUTH_USER_MODEL = 'users.User'
 
-# CORS
-CORS_ALLOW_ALL_ORIGINS = True
+# CORS and CSRF for Session Auth
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://localhost:8080",
+    "http://127.0.0.1:8080",
+    "http://localhost:3000",
+    "https://hospital-token-booking-system-p03y.onrender.com"
+]
+CORS_ALLOW_CREDENTIALS = True
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://localhost:8080",
+    "http://127.0.0.1:8080",
+    "http://localhost:3000",
+    "https://hospital-token-booking-system-p03y.onrender.com"
+]
 
 # DRF Settings
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.TokenAuthentication',
     )
 }
+
+# Booking System Settings
+BOOKING_START_TIME = "08:00"  # 8:00 AM
+BOOKING_END_TIME = "21:00"    # 9:00 PM
 
 from datetime import timedelta
 SIMPLE_JWT = {

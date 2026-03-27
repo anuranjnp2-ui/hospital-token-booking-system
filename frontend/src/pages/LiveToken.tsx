@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { fetchTodayTokens, fetchActiveBreaks } from "@/lib/supabase-helpers";
+import { fetchTodayTokens, fetchActiveBreaks } from "@/lib/api-helpers";
 import { UserNavbar } from "@/components/UserNavbar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";

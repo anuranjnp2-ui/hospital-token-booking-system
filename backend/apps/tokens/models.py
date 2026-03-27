@@ -24,4 +24,5 @@ class Token(models.Model):
         ordering = ['date', 'token_number']
 
     def __str__(self):
-        return f"Token {self.token_number} - {self.doctor.user.get_full_name()} - {self.date}"
+        doctor_name = self.doctor.name or (self.doctor.user.get_full_name() if self.doctor.user else "Unknown Doctor")
+        return f"Token {self.token_number} - {doctor_name} - {self.date}"

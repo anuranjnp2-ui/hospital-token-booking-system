@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Shield, ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
+import { apiClient } from "@/lib/axios";
 
 export default function AdminLogin() {
   const [username, setUsername] = useState("");
@@ -15,8 +16,8 @@ export default function AdminLogin() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const token = localStorage.getItem("access_token");
-    if (token) navigate("/admin");
+    // Optionally redirect if already authenticated
+    apiClient.get("auth/me/").then(() => navigate("/admin")).catch(() => {});
   }, [navigate]);
 
   const handleLogin = async () => {
@@ -26,20 +27,7 @@ export default function AdminLogin() {
     }
     setLoading(true);
     try {
-      const res = await fetch("https://hospital-token-booking-system-p03y.onrender.com/api/auth/login/", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password })
-      });
-      
-      if (!res.ok) {
-        throw new Error("Invalid username or password");
-      }
-      
-      const data = await res.json();
-      localStorage.setItem("access_token", data.access);
-      localStorage.setItem("refresh_token", data.refresh);
-      
+      await apiClient.post("auth/login/", { username, password });
       toast.success("Welcome, Admin!");
       navigate("/admin");
     } catch (err: any) {

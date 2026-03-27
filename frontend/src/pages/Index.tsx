@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { fetchHospitalInfo, fetchDoctors, fetchServices } from "@/lib/supabase-helpers";
+import { fetchHospitalInfo, fetchDoctors, fetchServices } from "@/lib/api-helpers";
 import { UserNavbar } from "@/components/UserNavbar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MapPin, Phone, Mail, Clock, User, HeartPulse, TestTubes, Scan, Monitor, Pill, Activity } from "lucide-react";

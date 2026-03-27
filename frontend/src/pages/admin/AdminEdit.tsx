@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { fetchHospitalInfo, fetchDoctors, fetchServices } from "@/lib/supabase-helpers";
+import { fetchHospitalInfo, fetchDoctors, fetchServices } from "@/lib/api-helpers";
 import { AdminNavbar } from "@/components/AdminNavbar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -9,17 +10,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { Save, Plus, Trash2, Hospital, User, Activity, Lock } from "lucide-react";
-
-const API_BASE = "https://hospital-token-booking-system-p03y.onrender.com/api";
-
-const getTokenHeaders = () => {
-  return {
-    "Content-Type": "application/json",
-    "Authorization": `Bearer ${localStorage.getItem("access_token")}`
-  };
-};
+import { apiClient } from "@/lib/axios";
 
 export default function AdminEdit() {
+  const navigate = useNavigate();
   const qc = useQueryClient();
   const { data: hospital } = useQuery({ queryKey: ["hospital_info"], queryFn: fetchHospitalInfo });
   const { data: doctors } = useQuery({ queryKey: ["doctors"], queryFn: fetchDoctors });
@@ -50,24 +44,14 @@ export default function AdminEdit() {
         name: hName, address: hAddress, phone: hPhone, email: hEmail, 
         description: hDesc, operating_hours: hHours 
       };
-      let res;
       if (hospital && hospital.id) {
-        res = await fetch(`${API_BASE}/hospital/${hospital.id}/`, {
-          method: "PATCH",
-          headers: getTokenHeaders(),
-          body: JSON.stringify(payload)
-        });
+        await apiClient.patch(`hospital/${hospital.id}/`, payload);
       } else {
-        res = await fetch(`${API_BASE}/hospital/`, {
-          method: "POST",
-          headers: getTokenHeaders(),
-          body: JSON.stringify(payload)
-        });
+        await apiClient.post(`hospital/`, payload);
       }
-      if (!res.ok) throw new Error("Failed to save hospital details");
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["hospital_info"] }); toast.success("Hospital info updated successfully!"); },
-    onError: (e: any) => toast.error(e.message),
+    onError: (e: any) => toast.error(e.response?.data?.error || e.message),
   });
 
   // Add doctor
@@ -76,31 +60,22 @@ export default function AdminEdit() {
   const [newDocQual, setNewDocQual] = useState("");
   const addDoctor = useMutation({
     mutationFn: async () => {
-      const res = await fetch(`${API_BASE}/doctors/`, {
-         method: "POST",
-         headers: getTokenHeaders(),
-         body: JSON.stringify({ name: newDocName, specialty: newDocSpec, qualification: newDocQual })
-      });
-      if (!res.ok) throw new Error("Failed to create Doctor Profile");
+      await apiClient.post(`doctors/`, { name: newDocName, specialty: newDocSpec, qualification: newDocQual });
     },
     onSuccess: () => { 
         qc.invalidateQueries({ queryKey: ["doctors"] }); 
         setNewDocName(""); setNewDocSpec(""); setNewDocQual(""); 
         toast.success("Doctor dynamically added to API!"); 
     },
-    onError: (e: any) => toast.error(e.message),
+    onError: (e: any) => toast.error(e.response?.data?.error || e.message),
   });
 
   const deleteDoctor = useMutation({
     mutationFn: async (id: string | number) => {
-      const res = await fetch(`${API_BASE}/doctors/${id}/`, {
-         method: "DELETE",
-         headers: getTokenHeaders()
-      });
-      if (!res.ok) throw new Error("Failed to delete doctor");
+      await apiClient.delete(`doctors/${id}/`);
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["doctors"] }); toast.success("Doctor deleted"); },
-    onError: (e: any) => toast.error(e.message),
+    onError: (e: any) => toast.error(e.response?.data?.error || e.message),
   });
 
   // Add service
@@ -108,27 +83,18 @@ export default function AdminEdit() {
   const [newSvcDesc, setNewSvcDesc] = useState("");
   const addService = useMutation({
     mutationFn: async () => {
-      const res = await fetch(`${API_BASE}/services/`, {
-         method: "POST",
-         headers: getTokenHeaders(),
-         body: JSON.stringify({ name: newSvcName, description: newSvcDesc })
-      });
-      if (!res.ok) throw new Error("Failed to add Service");
+      await apiClient.post(`services/`, { name: newSvcName, description: newSvcDesc });
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["services"] }); setNewSvcName(""); setNewSvcDesc(""); toast.success("Service added!"); },
-    onError: (e: any) => toast.error(e.message),
+    onError: (e: any) => toast.error(e.response?.data?.error || e.message),
   });
 
   const deleteService = useMutation({
     mutationFn: async (id: string | number) => {
-      const res = await fetch(`${API_BASE}/services/${id}/`, {
-         method: "DELETE",
-         headers: getTokenHeaders()
-      });
-      if (!res.ok) throw new Error("Failed to delete service");
+      await apiClient.delete(`services/${id}/`);
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["services"] }); toast.success("Service removed"); },
-    onError: (e: any) => toast.error(e.message),
+    onError: (e: any) => toast.error(e.response?.data?.error || e.message),
   });
 
   // Password change state
@@ -138,24 +104,26 @@ export default function AdminEdit() {
 
   const changePassword = useMutation({
     mutationFn: async () => {
-      const res = await fetch(`${API_BASE}/auth/change-password/`, {
-        method: "POST",
-        headers: getTokenHeaders(),
-        body: JSON.stringify({ current_password: currentPassword, new_password: newPassword, confirm_password: confirmPassword })
+      const { data } = await apiClient.post(`auth/change-password/`, { 
+        current_password: currentPassword, 
+        new_password: newPassword, 
+        confirm_password: confirmPassword 
       });
-      if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.error || "Failed to change password");
-      }
-      return res.json();
+      return data;
     },
-    onSuccess: () => {
-      toast.success("Password changed successfully!");
+    onSuccess: async () => {
+      toast.success("Password changed! Please log in again.");
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
+      try {
+        await apiClient.post("auth/logout/");
+      } catch (e) {
+        console.error("Logout failed", e);
+      }
+      navigate("/admin/login");
     },
-    onError: (e: any) => toast.error(e.message),
+    onError: (e: any) => toast.error(e.response?.data?.error || e.response?.data?.new_password || e.message),
   });
 
   return (

@@ -1,20 +1,12 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { fetchTodayTokens, fetchActiveBreaks } from "@/lib/supabase-helpers";
+import { fetchTodayTokens, fetchActiveBreaks } from "@/lib/api-helpers";
 import { AdminNavbar } from "@/components/AdminNavbar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Radio, Coffee, UtensilsCrossed, CheckCircle, XCircle, Play, Clock, AlertTriangle } from "lucide-react";
-
-const API_BASE = "https://hospital-token-booking-system-p03y.onrender.com/api";
-
-const getTokenHeaders = () => {
-  return {
-    "Content-Type": "application/json",
-    "Authorization": `Bearer ${localStorage.getItem("access_token")}`
-  };
-};
+import { apiClient } from "@/lib/axios";
 
 export default function AdminLiveToken() {
   const qc = useQueryClient();
@@ -27,58 +19,36 @@ export default function AdminLiveToken() {
 
   const updateToken = useMutation({
     mutationFn: async ({ id, status }: { id: string | number; status: string }) => {
-      // Map frontend status strings to backend choices
       const mappedStatus = status.toUpperCase();
-      const res = await fetch(`${API_BASE}/tokens/${id}/`, {
-        method: "PATCH",
-        headers: getTokenHeaders(),
-        body: JSON.stringify({ status: mappedStatus })
-      });
-      if (!res.ok) {
-        const errorText = await res.text();
-        throw new Error(`Server returned ${res.status}: ${errorText}`);
-      }
+      const { data } = await apiClient.patch(`tokens/${id}/`, { status: mappedStatus });
+      return data;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["today_tokens"] }),
-    onError: (e: any) => toast.error(e.message),
+    onError: (e: any) => toast.error(e.response?.data?.message || e.message),
   });
 
   const deleteToken = useMutation({
     mutationFn: async (id: string | number) => {
-      const res = await fetch(`${API_BASE}/tokens/${id}/`, {
-        method: "DELETE",
-        headers: getTokenHeaders()
-      });
-      if (!res.ok) throw new Error("Failed to delete token");
+      await apiClient.delete(`tokens/${id}/`);
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["today_tokens"] }); toast.success("Token removed"); },
-    onError: (e: any) => toast.error(e.message),
+    onError: (e: any) => toast.error(e.response?.data?.message || e.message),
   });
 
   const addBreak = useMutation({
     mutationFn: async (breakType: string) => {
-      const res = await fetch(`${API_BASE}/breaks/`, {
-        method: "POST",
-        headers: getTokenHeaders(),
-        body: JSON.stringify({ break_type: breakType, active: true })
-      });
-      if (!res.ok) throw new Error("Failed to start break");
+      await apiClient.post(`breaks/`, { break_type: breakType, active: true });
     },
     onSuccess: (_, breakType) => { qc.invalidateQueries({ queryKey: ["active_breaks"] }); toast.success(`${breakType} started`); },
-    onError: (e: any) => toast.error(e.message),
+    onError: (e: any) => toast.error(e.response?.data?.message || e.message),
   });
 
   const endBreak = useMutation({
     mutationFn: async (id: string | number) => {
-      const res = await fetch(`${API_BASE}/breaks/${id}/`, {
-        method: "PATCH",
-        headers: getTokenHeaders(),
-        body: JSON.stringify({ active: false })
-      });
-      if (!res.ok) throw new Error("Failed to end break");
+      await apiClient.patch(`breaks/${id}/`, { active: false });
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["active_breaks"] }); toast.success("Break ended"); },
-    onError: (e: any) => toast.error(e.message),
+    onError: (e: any) => toast.error(e.response?.data?.message || e.message),
   });
 
   const callNext = () => {

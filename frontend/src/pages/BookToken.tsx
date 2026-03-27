@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { bookToken } from "@/lib/supabase-helpers";
+import { bookToken } from "@/lib/api-helpers";
 import { toast } from "sonner";
 import { Ticket, User, Phone, CheckCircle } from "lucide-react";
 
@@ -22,7 +22,16 @@ export default function BookToken() {
   const [loading, setLoading] = useState(false);
   const [booking, setBooking] = useState<BookingResult | null>(null);
 
+  const now = new Date();
+  const currentHour = now.getHours();
+  // Booking is allowed from 8:00 AM to 9:00 PM (hour 8 to 20)
+  const isBookingOpen = currentHour >= 8 && currentHour < 21;
+
   const handleBook = async () => {
+    if (!isBookingOpen) {
+      toast.error("Booking is closed. Available from 8:00 AM to 9:00 PM.");
+      return;
+    }
     if (!name.trim() || !phone.trim()) {
       toast.error("Please enter your name and phone number");
       return;
@@ -51,12 +60,20 @@ export default function BookToken() {
       <div className="container py-12 max-w-lg">
         <h1 className="text-3xl font-bold font-display text-gradient mb-8 text-center">Book Your Token</h1>
 
-        <Card>
+        <Card className={!isBookingOpen ? "opacity-90 grayscale-[0.5]" : ""}>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Ticket className="h-5 w-5 text-primary" />
-              Patient Details
-            </CardTitle>
+            <div className="flex justify-between items-center mb-2">
+              <CardTitle className="flex items-center gap-2">
+                <Ticket className="h-5 w-5 text-primary" />
+                Patient Details
+              </CardTitle>
+              <div className={`text-xs font-bold px-2 py-1 rounded-full ${isBookingOpen ? 'bg-success/10 text-success border border-success/20' : 'bg-destructive/10 text-destructive border border-destructive/20'}`}>
+                {isBookingOpen ? "• OPEN" : "• CLOSED"}
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Token booking is available daily from <strong>8:00 AM to 9:00 PM</strong>.
+            </p>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
@@ -70,6 +87,7 @@ export default function BookToken() {
                   onChange={(e) => setName(e.target.value)}
                   className="pl-9"
                   maxLength={100}
+                  disabled={!isBookingOpen}
                 />
               </div>
             </div>
@@ -84,11 +102,16 @@ export default function BookToken() {
                   onChange={(e) => setPhone(e.target.value)}
                   className="pl-9"
                   maxLength={15}
+                  disabled={!isBookingOpen}
                 />
               </div>
             </div>
-            <Button onClick={handleBook} disabled={loading} className="w-full gradient-primary text-primary-foreground">
-              {loading ? "Booking..." : "Book Token"}
+            <Button 
+              onClick={handleBook} 
+              disabled={loading || !isBookingOpen} 
+              className={`w-full text-primary-foreground ${isBookingOpen ? 'gradient-primary' : 'bg-muted cursor-not-allowed'}`}
+            >
+              {!isBookingOpen ? "Booking Closed" : (loading ? "Booking..." : "Book Token")}
             </Button>
           </CardContent>
         </Card>
