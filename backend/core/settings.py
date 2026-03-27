@@ -29,7 +29,14 @@ import os
 SECRET_KEY = os.environ.get("SECRET_KEY", "dev-secret-key")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get("DEBUG", "False") == "True"
-ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = ["hospital-token-booking-system-p03y.onrender.com", "localhost", "127.0.0.1", "*"]
+
+# Render deployment settings
+if not DEBUG:
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
 
 # Application definition
 
@@ -44,7 +51,6 @@ INSTALLED_APPS = [
     
     # Third-party apps
     'rest_framework',
-    'corsheaders',
     'rest_framework_simplejwt',
 
     # Local apps

@@ -1,8 +1,24 @@
 import axios from 'axios';
 
 // Automatically send cookies (Django sessionid, csrftoken) with every request
+const DEFAULT_URL = 'http://localhost:8000/api/';
+const rawBaseURL = import.meta.env.VITE_API_URL;
+
+// Production warning for missing environment variable
+if (import.meta.env.PROD && !rawBaseURL) {
+  console.warn(
+    "VITE_API_URL is NOT set in production environment! " +
+    "Falling back to localhost which will likely fail. " +
+    "Please set VITE_API_URL in your Vercel/deployment environment."
+  );
+}
+
+// Ensure baseURL ends with a slash
+const finalBaseURL = rawBaseURL || DEFAULT_URL;
+const baseURL = finalBaseURL.endsWith('/') ? finalBaseURL : `${finalBaseURL}/`;
+
 export const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000/api/',
+  baseURL,
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
