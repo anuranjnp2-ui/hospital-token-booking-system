@@ -30,7 +30,7 @@ CREATE TABLE public.hospital_info (
   phone TEXT DEFAULT '',
   email TEXT DEFAULT '',
   description TEXT DEFAULT '',
-  operating_hours TEXT DEFAULT '9:00 AM - 5:00 PM',
+  operating_hours TEXT DEFAULT '9:00 AM - 9:00 PM',
   updated_at TIMESTAMPTZ DEFAULT now()
 );
 ALTER TABLE public.hospital_info ENABLE ROW LEVEL SECURITY;
