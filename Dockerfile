@@ -34,4 +34,4 @@ ENV PORT=10000
 
 # Start command
 WORKDIR /app/backend
-CMD ["gunicorn", "core.wsgi:application", "--bind", "0.0.0.0:10000"]
+CMD sh -c "python manage.py migrate --noinput && python manage.py shell -c 'import seeds; seeds.create_seeds()' && gunicorn core.wsgi:application --bind 0.0.0.0:${PORT:-10000}"
