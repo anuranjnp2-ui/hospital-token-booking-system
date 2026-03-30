@@ -2,24 +2,11 @@
   "version": 2,
   "builds": [
     {
-      "src": "backend/core/wsgi.py",
-      "use": "@vercel/python",
-      "config": { "maxDuration": 60 }
-    },
-    {
       "src": "frontend/package.json",
       "use": "@vercel/static-build"
     }
   ],
   "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "backend/core/wsgi.py"
-    },
-    {
-      "src": "/static/(.*)",
-      "dest": "/frontend/static/$1"
-    },
     {
       "src": "/(.*)",
       "dest": "/frontend/$1",
