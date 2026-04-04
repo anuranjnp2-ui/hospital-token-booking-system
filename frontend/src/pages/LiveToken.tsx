@@ -17,7 +17,7 @@ export default function LiveToken() {
     refetchInterval: 5000,
   });
 
-  const consulting = tokens?.find((t) => t.status === "consulting");
+  //const consulting = tokens?.find((t) => t.status === "consulting");
 //  const waiting = tokens?.filter((t) => t.status === "waiting").slice(0, 10) || [];
   const sortedTokens = [...(tokens || [])].sort(
     (a, b) => a.token_number - b.token_number
