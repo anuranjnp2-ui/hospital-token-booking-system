@@ -37,7 +37,11 @@ class Doctor(models.Model):
     available_to = models.TimeField(null=True, blank=True)
 
     def __str__(self):
-        return f"Dr. {self.name or (self.user.get_full_name() if self.user else 'Unknown')}"
+        if self.name:
+            return f"Dr. {self.name}"
+        elif self.user:
+            return f"Dr. {self.user.username}"
+        return "Dr. Unknown"
 
 class DoctorBreak(models.Model):
     doctor = models.ForeignKey(Doctor, on_delete=models.CASCADE, related_name='breaks', null=True, blank=True)

@@ -18,7 +18,19 @@ export default function LiveToken() {
   });
 
   const consulting = tokens?.find((t) => t.status === "consulting");
-  const waiting = tokens?.filter((t) => t.status === "waiting").slice(0, 10) || [];
+//  const waiting = tokens?.filter((t) => t.status === "waiting").slice(0, 10) || [];
+  const sortedTokens = [...(tokens || [])].sort(
+    (a, b) => a.token_number - b.token_number
+  );
+
+  const consulting = sortedTokens.find((t) => t.status === "consulting");
+
+  const waiting = sortedTokens
+    .filter((t) => t.status === "waiting")
+    .slice(0, 10);
+
+
+
   const hasActiveBreak = breaks && breaks.length > 0;
 
   const estimateTime = (position: number) => {

@@ -15,7 +15,12 @@ const iconMap: Record<string, React.ElementType> = {
 
 export default function Index() {
   const { data: hospital } = useQuery({ queryKey: ["hospital_info"], queryFn: fetchHospitalInfo });
-  const { data: doctors } = useQuery({ queryKey: ["doctors"], queryFn: fetchDoctors });
+  //const { data: doctors } = useQuery({ queryKey: ["doctors"], queryFn: fetchDoctors });
+  const { data: doctors, isLoading } = useQuery({ queryKey: ["doctors"], queryFn: fetchDoctors });
+
+  if (isLoading) {
+    return <p className="text-center py-10">Loading...</p>;
+  }
   const { data: services } = useQuery({ queryKey: ["services"], queryFn: fetchServices });
 
   return (

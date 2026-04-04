@@ -5,9 +5,19 @@ export async function fetchHospitalInfo() {
   return data.length > 0 ? data[0] : null;
 }
 
+//export async function fetchDoctors() {
+//  const { data } = await apiClient.get("doctors/");
+//  return data;
+//}
+
 export async function fetchDoctors() {
-  const { data } = await apiClient.get("doctors/");
-  return data;
+  try {
+    const { data } = await apiClient.get("doctors/");
+    return data;
+  } catch (err) {
+    console.error("Doctors fetch error:", err);
+    return [];
+  }
 }
 
 export async function fetchServices() {
@@ -15,19 +25,39 @@ export async function fetchServices() {
   return data;
 }
 
-export async function fetchTodayTokens() {
-  const { data } = await apiClient.get("tokens/");
+//export async function fetchTodayTokens() {
+//  const { data } = await apiClient.get("tokens/");
   // Map Django backend string choices to the React UI's expectations
-  return data.map((t: any) => ({
-    ...t,
-    status: t.status === 'PENDING' ? 'waiting' 
-          : t.status === 'IN_PROGRESS' ? 'consulting' 
-          : t.status.toLowerCase()
-  }));
+//  return data.map((t: any) => ({
+//    ...t,
+//    status: t.status === 'PENDING' ? 'waiting' 
+//          : t.status === 'IN_PROGRESS' ? 'consulting' 
+//          : t.status.toLowerCase()
+//  }));
+//}
+export async function fetchTodayTokens() {
+  const today = new Date().toISOString().split("T")[0];
+
+  const { data } = await apiClient.get(`tokens/?date=${today}`);
+
+  return data
+    .sort((a: any, b: any) => a.token_number - b.token_number)
+    .map((t: any) => ({
+      ...t,
+      status: t.status === "PENDING"
+        ? "waiting"
+        : t.status === "IN_PROGRESS"
+        ? "consulting"
+        : t.status.toLowerCase(),
+    }));
 }
 
+//export async function fetchActiveBreaks() {
+//  const { data } = await apiClient.get("breaks/");
+//  return data;
+//}
 export async function fetchActiveBreaks() {
-  const { data } = await apiClient.get("breaks/");
+  const { data } = await apiClient.get("breaks/?active=true");
   return data;
 }
 
@@ -44,6 +74,10 @@ export async function bookToken(patientName: string, phone: string) {
   }
 }
 
+//export async function checkIsAdmin() {
+//  return false;
+//}
 export async function checkIsAdmin() {
-  return false;
+  const token = localStorage.getItem("admin_token");
+  return !!token;
 }

@@ -25,7 +25,11 @@ class DoctorSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'full_name', 'specialty', 'qualification', 'department', 'available_from', 'available_to']
 
     def get_full_name(self, obj):
-        return obj.name or (obj.user.get_full_name() if obj.user else '')
+        if obj.name:
+            return obj.name
+        if obj.user:
+            return getattr(obj.user, 'get_full_name', lambda: obj.user.username)()
+        return ""
 
 class DoctorBreakSerializer(serializers.ModelSerializer):
     class Meta:

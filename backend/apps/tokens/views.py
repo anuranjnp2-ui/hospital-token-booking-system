@@ -8,6 +8,7 @@ from datetime import datetime, time
 from .models import Token
 from .serializers import TokenSerializer
 from apps.doctors.models import Doctor
+from django.db import transaction
 
 class TokenViewSet(viewsets.ModelViewSet):
     queryset = Token.objects.all()
@@ -67,9 +68,53 @@ class TokenViewSet(viewsets.ModelViewSet):
         today = timezone.now().date()
         patient_name = request.data.get('patient_name', '')
         phone = request.data.get('phone', '')
+
+
+
+        if not patient_name or not phone:
+            return Response(
+                {"error": "Name and phone are required"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+
+
+
         
         last_token = Token.objects.filter(doctor=doctor, date=today).order_by('-token_number').first()
         token_number = 1 if not last_token else last_token.token_number + 1
+
+        with transaction.atomic():
+
+            last_token = Token.objects.select_for_update().filter(
+                doctor=doctor, date=today
+            ).order_by('-token_number').first()
+
+            token_number = 1 if not last_token else last_token.token_number + 1
+
+            token = Token.objects.create(
+                user=request.user if request.user.is_authenticated else None,
+                patient_name=patient_name,
+                phone=phone,
+                doctor=doctor,
+                token_number=token_number,
+                date=today
+            )
+            
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
         token = Token.objects.create(
             user=request.user if request.user.is_authenticated else None,

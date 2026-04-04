@@ -25,7 +25,7 @@ export default function BookToken() {
   const now = new Date();
   const currentHour = now.getHours();
   // Booking is allowed from 8:00 AM to 9:00 PM (hour 8 to 20)
-  const isBookingOpen = currentHour >= 8 && currentHour < 21;
+//  const isBookingOpen = currentHour >= 8 && currentHour < 21;
 
   const handleBook = async () => {
     if (!isBookingOpen) {
