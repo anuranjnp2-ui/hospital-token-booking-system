@@ -45,9 +45,9 @@ export default function AdminEdit() {
         description: hDesc, operating_hours: hHours 
       };
       if (hospital && hospital.id) {
-        await apiClient.patch(`hospital/${hospital.id}/`, payload);
+        await apiClient.patch(`doctors/hospital/${hospital.id}/`, payload);
       } else {
-        await apiClient.post(`hospital/`, payload);
+        await apiClient.post(`doctors/hospital/`, payload);
       }
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["hospital_info"] }); toast.success("Hospital info updated successfully!"); },
