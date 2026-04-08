@@ -21,7 +21,7 @@ from .views import DoctorViewSet, DepartmentViewSet, HospitalViewSet, ServiceVie
 router = DefaultRouter()
 
 # ✅ FIX HERE
-router.register(r'', DoctorViewSet, basename='doctors')
+router.register(r'doctors', DoctorViewSet, basename='doctors')
 
 router.register(r'departments', DepartmentViewSet)
 router.register(r'hospital', HospitalViewSet)
