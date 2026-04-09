@@ -85,7 +85,7 @@ import { apiClient } from "./axios";
 
 export async function fetchHospitalInfo() {
   const { data } = await apiClient.get("doctors/hospital/");
-  return data.length > 0 ? data[0] : null;
+  return Array.isArray(data) && data.length > 0 ? data[0] : null;
 }
 
 export async function fetchDoctors() {

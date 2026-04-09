@@ -9,7 +9,15 @@ class DepartmentSerializer(serializers.ModelSerializer):
 class HospitalSerializer(serializers.ModelSerializer):
     class Meta:
         model = Hospital
-        fields = '__all__'
+        fields = [
+            'id',
+            'name',
+            'address',
+            'phone',
+            'email',
+            'description',
+            'operating_hours'
+        ]
 
 class ServiceSerializer(serializers.ModelSerializer):
     class Meta:
@@ -31,7 +39,7 @@ class ServiceSerializer(serializers.ModelSerializer):
 #            return getattr(obj.user, 'get_full_name', lambda: obj.user.username)()
 #        return ""
 class DoctorSerializer(serializers.ModelSerializer):
-    department = DepartmentSerializer(read_only=True, allow_null=True)
+    department = serializers.SerializerMethodField()
     full_name = serializers.SerializerMethodField()
 
     class Meta:
@@ -47,12 +55,22 @@ class DoctorSerializer(serializers.ModelSerializer):
             'available_to'
         ]
 
+    def get_department(self, obj):
+        if obj.department:
+            return {
+                "id": obj.department.id,
+                "name": obj.department.name
+            }
+        return None
+
     def get_full_name(self, obj):
         if obj.name:
             return obj.name
         if obj.user:
             return getattr(obj.user, 'get_full_name', lambda: obj.user.username)()
         return ""
+
+     
 
 
 class DoctorBreakSerializer(serializers.ModelSerializer):
