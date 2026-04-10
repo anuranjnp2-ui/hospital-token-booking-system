@@ -160,6 +160,7 @@ if DEBUG:
 else:
     CORS_ALLOW_ALL_ORIGINS = False
     CORS_ALLOWED_ORIGINS = [
+        "https://hospital-token-booking-system.vercel.app",
         "http://localhost:5173",
         "http://localhost:3000",
     ]
@@ -170,6 +171,7 @@ CORS_ALLOWED_ORIGIN_REGEXES = [
 ]
 CSRF_TRUSTED_ORIGINS = [
     "https://hospital-token-booking-system-p03y.onrender.com",
+    "https://hospital-token-booking-system.vercel.app",
     "https://*.vercel.app",
     "http://localhost:8080",
     "http://localhost:5173"
