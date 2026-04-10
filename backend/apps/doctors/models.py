@@ -1,8 +1,6 @@
 from django.db import models
 from django.conf import settings
 
-from backend.apps.tokens import serializers
-
 class Hospital(models.Model):
     name = models.CharField(max_length=200, default="Modern Clinic")
     address = models.CharField(max_length=500, blank=True)
@@ -35,8 +33,8 @@ class Doctor(models.Model):
     specialty = models.CharField(max_length=200, blank=True)
     qualification = models.CharField(max_length=200, blank=True)
     department = models.ForeignKey(Department, on_delete=models.CASCADE, related_name='doctors', null=True, blank=True)
-    available_from = serializers.TimeField(format="%H:%M", required=False, allow_null=True)
-    available_to = serializers.TimeField(format="%H:%M", required=False, allow_null=True)
+    available_from = models.TimeField(null=True, blank=True)
+    available_to = models.TimeField(null=True, blank=True)
 
     def __str__(self):
         if self.name:
