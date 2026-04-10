@@ -38,9 +38,11 @@ class ServiceSerializer(serializers.ModelSerializer):
 #        if obj.user:
 #            return getattr(obj.user, 'get_full_name', lambda: obj.user.username)()
 #        return ""
-class DoctorSerializer(serializers.ModelSerializer):
+cclass DoctorSerializer(serializers.ModelSerializer):
     department = serializers.SerializerMethodField()
     full_name = serializers.SerializerMethodField()
+    available_from = serializers.TimeField(format="%H:%M", required=False, allow_null=True)
+    available_to = serializers.TimeField(format="%H:%M", required=False, allow_null=True)
 
     class Meta:
         model = Doctor
@@ -56,19 +58,30 @@ class DoctorSerializer(serializers.ModelSerializer):
         ]
 
     def get_department(self, obj):
-        if obj.department:
-            return {
-                "id": obj.department.id,
-                "name": obj.department.name
-            }
+        try:
+            if obj.department:
+                return {
+                    "id": obj.department.id,
+                    "name": obj.department.name
+                }
+        except Exception:
+            pass
         return None
 
     def get_full_name(self, obj):
         if obj.name:
             return obj.name
+        
         if obj.user:
-            return getattr(obj.user, 'get_full_name', lambda: obj.user.username)()
-        return ""
+            try:
+                full_name = obj.user.get_full_name()
+                if full_name:
+                    return full_name
+                return obj.user.username or "Unknown Doctor"
+            except Exception:
+                return "Unknown Doctor"
+        
+        return "Unknown Doctor"
 
      
 
