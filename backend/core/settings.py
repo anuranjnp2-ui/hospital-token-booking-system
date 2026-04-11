@@ -10,10 +10,25 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
+from datetime import timedelta
 from pathlib import Path
 import os
 from dotenv import load_dotenv
 import dj_database_url
+
+# Temporary superuser creator for Render
+from django.db.models.signals import post_migrate
+from django.dispatch import receiver
+
+
+@receiver(post_migrate)
+def create_admin_user(sender, **kwargs):
+    from django.contrib.auth import get_user_model
+    User = get_user_model()
+    if not User.objects.filter(username='admin_new').exists():
+        User.objects.create_superuser(
+            'admin_new', 'admin@example.com', 'TemporaryPassword123!')
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -26,11 +41,11 @@ load_dotenv(BASE_DIR / '.env')
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-import os
 SECRET_KEY = os.environ.get("SECRET_KEY", "dev-secret-key")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get("DEBUG", "False") == "True"
-ALLOWED_HOSTS = ["hospital-token-booking-system-p03y.onrender.com", "localhost", "127.0.0.1", "*"]
+ALLOWED_HOSTS = ["hospital-token-booking-system-p03y.onrender.com",
+                 "localhost", "127.0.0.1", "*"]
 
 # Render deployment settings
 if not DEBUG:
@@ -49,7 +64,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    
+
     # Third-party apps
     'rest_framework',
     'rest_framework_simplejwt',
@@ -62,9 +77,9 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -108,7 +123,7 @@ if DEBUG:
 else:
     DATABASES = {
         'default': dj_database_url.config(
-            conn_max_age=600,
+            conn_max_age=0,
             conn_health_checks=True,
         )
     }
@@ -194,7 +209,6 @@ REST_FRAMEWORK = {
 BOOKING_START_TIME = "08:00"  # 8:00 AM
 BOOKING_END_TIME = "21:00"    # 9:00 PM
 
-from datetime import timedelta
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
