@@ -60,10 +60,20 @@ export default function Index() {
           {doctors?.map((doc) => (
             <Card key={doc.id} className="hover:shadow-lg transition-shadow">
               <CardContent className="flex items-center gap-4 p-5">
-                {/* ... icon code ... */}
+                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-accent">
+                  <User className="h-7 w-7 text-accent-foreground" />
+                </div>
                 <div>
+                  {/* Use String() to prevent crashing if name is an object */}
                   <p className="font-semibold">{String(doc.name)}</p>
-                  <p className="text-sm text-primary font-medium">{String(doc.specialty)}</p>
+                  
+                  {/* Check if department exists and is an object, then show the name */}
+                  <p className="text-sm text-primary font-medium">
+                    {typeof doc.department === 'object' && doc.department !== null 
+                      ? doc.department.name 
+                      : (doc.specialty || "General Physician")}
+                  </p>
+                  
                   {doc.qualification && <p className="text-xs text-muted-foreground">{String(doc.qualification)}</p>}
                 </div>
               </CardContent>
