@@ -25,15 +25,22 @@ export const apiClient = axios.create({
   }
 });
 
-// Add CSRF token interceptor if needed
+// Add CSRF token interceptor + JWT Bearer token
 apiClient.interceptors.request.use((config) => {
+  // Attach CSRF token if present (for session-based fallback)
   const csrfToken = document.cookie
     .split('; ')
     .find(row => row.startsWith('csrftoken='))
     ?.split('=')[1];
-  
   if (csrfToken) {
     config.headers['X-CSRFToken'] = csrfToken;
   }
+
+  // Attach JWT Bearer token for cross-origin auth (Vercel <-> Render)
+  const jwtToken = localStorage.getItem('admin_token');
+  if (jwtToken) {
+    config.headers['Authorization'] = `Bearer ${jwtToken}`;
+  }
+
   return config;
 });

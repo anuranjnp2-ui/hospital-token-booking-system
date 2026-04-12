@@ -16,8 +16,10 @@ export default function AdminLogin() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Optionally redirect if already authenticated
-    apiClient.get("auth/me/").then(() => navigate("/admin")).catch(() => {});
+    // If already have a token, go straight to admin
+    if (localStorage.getItem("admin_token")) {
+      navigate("/admin");
+    }
   }, [navigate]);
 
   const handleLogin = async () => {
@@ -27,11 +29,15 @@ export default function AdminLogin() {
     }
     setLoading(true);
     try {
-      await apiClient.post("auth/login/", { username, password });
+      const response = await apiClient.post("auth/login/", { username, password });
+      // Save JWT token to localStorage for cross-origin auth (Vercel <-> Render)
+      if (response.data.access) {
+        localStorage.setItem("admin_token", response.data.access);
+      }
       toast.success("Welcome, Admin!");
       navigate("/admin");
     } catch (err: any) {
-      toast.error(err.message || "Login failed");
+      toast.error(err.response?.data?.error || err.message || "Login failed");
     } finally {
       setLoading(false);
     }
