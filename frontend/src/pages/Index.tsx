@@ -87,8 +87,9 @@ export default function Index() {
                     <Icon className="h-6 w-6 text-accent-foreground" />
                   </div>
                   <div>
-                    <p className="font-semibold">{svc.name}</p>
-                    {svc.description && <p className="text-sm text-muted-foreground">{svc.description}</p>}
+                    {/* CRITICAL FIX: Ensure name is a string */}
+                    <p className="font-semibold">{typeof svc.name === 'object' ? svc.name.name : svc.name}</p>
+                    {svc.description && <p className="text-sm text-muted-foreground">{String(svc.description)}</p>}
                   </div>
                 </CardContent>
               </Card>
