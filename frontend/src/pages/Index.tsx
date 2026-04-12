@@ -31,7 +31,7 @@ export default function Index() {
       <section className="gradient-hero py-16 md:py-24">
         <div className="container text-center">
           <h1 className="text-4xl md:text-5xl font-extrabold font-display text-gradient mb-4">
-            {hospital?.name || "City General Hospital"}
+            {typeof hospital?.name === 'object' ? String(hospital.name.name) : String(hospital?.name || "City General Hospital")}
           </h1>
           <p className="max-w-2xl mx-auto text-muted-foreground text-lg">
             {hospital?.description || "Quality healthcare services for you and your family."}
@@ -60,13 +60,11 @@ export default function Index() {
           {doctors?.map((doc) => (
             <Card key={doc.id} className="hover:shadow-lg transition-shadow">
               <CardContent className="flex items-center gap-4 p-5">
-                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-accent">
-                  <User className="h-7 w-7 text-accent-foreground" />
-                </div>
+                {/* ... icon code ... */}
                 <div>
-                  <p className="font-semibold">{doc.name}</p>
-                  <p className="text-sm text-primary font-medium">{doc.specialty}</p>
-                  {doc.qualification && <p className="text-xs text-muted-foreground">{doc.qualification}</p>}
+                  <p className="font-semibold">{String(doc.name)}</p>
+                  <p className="text-sm text-primary font-medium">{String(doc.specialty)}</p>
+                  {doc.qualification && <p className="text-xs text-muted-foreground">{String(doc.qualification)}</p>}
                 </div>
               </CardContent>
             </Card>
@@ -83,12 +81,9 @@ export default function Index() {
             return (
               <Card key={svc.id} className="hover:shadow-lg transition-shadow">
                 <CardContent className="flex items-center gap-4 p-5">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-accent">
-                    <Icon className="h-6 w-6 text-accent-foreground" />
-                  </div>
+                  {/* ... icon code ... */}
                   <div>
-                    {/* CRITICAL FIX: Ensure name is a string */}
-                    <p className="font-semibold">{typeof svc.name === 'object' ? svc.name.name : svc.name}</p>
+                    <p className="font-semibold">{typeof svc.name === 'object' ? String(svc.name.name) : String(svc.name)}</p>
                     {svc.description && <p className="text-sm text-muted-foreground">{String(svc.description)}</p>}
                   </div>
                 </CardContent>
