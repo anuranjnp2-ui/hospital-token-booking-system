@@ -5,7 +5,6 @@ from rest_framework.views import APIView
 from .serializers import RegisterSerializer, ChangePasswordSerializer
 from .models import User
 from django.contrib.auth import authenticate, login, logout
-from rest_framework_simplejwt.tokens import RefreshToken
 
 class LoginView(APIView):
     permission_classes = (AllowAny,)
@@ -15,14 +14,7 @@ class LoginView(APIView):
         user = authenticate(request, username=username, password=password)
         if user is not None:
             login(request, user)
-            # Generate JWT token for cross-origin (Vercel <-> Render) auth
-            refresh = RefreshToken.for_user(user)
-            return Response({
-                "message": "Logged in successfully",
-                "user": user.username,
-                "access": str(refresh.access_token),
-                "refresh": str(refresh),
-            })
+            return Response({"message": "Logged in successfully", "user": user.username})
         return Response({"error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
 
 class LogoutView(APIView):
