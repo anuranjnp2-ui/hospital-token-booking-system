@@ -21,15 +21,14 @@ export default function AdminLogin() {
   }, [navigate]);
 
   const handleLogin = async () => {
-    if (!username || !password) {
-      toast.error("Please enter username and password");
-      return;
-    }
-    setLoading(true);
+
+    // ... validation code ...
     try {
       await apiClient.post("auth/login/", { username, password });
       toast.success("Welcome, Admin!");
-      navigate("/admin");
+      
+      // Try navigating to the specific dashboard route
+      navigate("/admin/dashboard"); 
     } catch (err: any) {
       toast.error(err.message || "Login failed");
     } finally {

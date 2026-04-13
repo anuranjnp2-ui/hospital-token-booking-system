@@ -194,8 +194,14 @@ CSRF_TRUSTED_ORIGINS = [
 
 # Allow frontend to read CSRF cookie
 CSRF_COOKIE_HTTPONLY = False
-CSRF_COOKIE_SAMESITE = 'Lax' if DEBUG else 'None'
-SESSION_COOKIE_SAMESITE = 'Lax' if DEBUG else 'None'
+if DEBUG:
+    CSRF_COOKIE_SAMESITE = 'Lax'
+    SESSION_COOKIE_SAMESITE = 'Lax'
+else:
+    CSRF_COOKIE_SAMESITE = 'None'
+    SESSION_COOKIE_SAMESITE = 'None'
+    CSRF_COOKIE_SECURE = True   # MUST be True if SameSite is None
+    SESSION_COOKIE_SECURE = True # MUST be True if SameSite is None
 
 # DRF Settings
 REST_FRAMEWORK = {
