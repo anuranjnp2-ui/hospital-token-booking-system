@@ -17,6 +17,7 @@ export default function AdminLogin() {
 
   useEffect(() => {
     // Optionally redirect if already authenticated
+    // Ensure the slash is at the end: "auth/me/"
     apiClient.get("auth/me/").then(() => navigate("/admin")).catch(() => { });
   }, [navigate]);
 
@@ -28,7 +29,7 @@ export default function AdminLogin() {
       toast.success("Welcome, Admin!");
       
       // Try navigating to the specific dashboard route
-      navigate("/admin/dashboard"); 
+      navigate("/admin"); 
     } catch (err: any) {
       toast.error(err.message || "Login failed");
     } finally {
